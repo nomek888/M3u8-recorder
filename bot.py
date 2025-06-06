@@ -8,8 +8,8 @@ import traceback
 import re
 
 # Bot token and owner ID from environment variables
-BOT_TOKEN = os.environ.get("7639447946:AAHzVWhmRA184lRYoQk44T_kyM4anupgx2s")
-OWNER_ID = int(os.environ.get("1169394017"))
+BOT_TOKEN = os.environ.get("BOT_TOKEN")
+OWNER_ID = int(os.environ.get("OWNER_ID"))
 
 # Telegram message character limit
 TELEGRAM_MESSAGE_LIMIT = 4096
