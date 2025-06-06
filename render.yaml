@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: stream-recorder-bot
+    env: docker
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: BOT_TOKEN
+        sync: false
+      - key: OWNER_ID
+        sync: false
+    autoDeploy: true
