@@ -6,6 +6,8 @@ import time
 import urllib.request
 import traceback
 import re
+from aiohttp import web
+import asyncio
 
 # Bot token and owner ID from environment variables
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
@@ -195,7 +197,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 file_size = os.path.getsize(output_file) / (1024 * 1024)
             except Exception as e:
                 error_msg = f"Error accessing recorded file: {str(e)}"
-                await update.message.reply_text(truncate_message(error_msg))
+                await query.message.reply_text(truncate_message(error_msg))
                 print(f"File Access Error: {error_msg}")
                 print(traceback.format_exc())
                 return
@@ -230,19 +232,39 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         print(f"Button Callback Error: {error_msg}")
         print(traceback.format_exc())
 
-# Main function to run the bot
-def main():
+# Dummy HTTP server to satisfy Render's port requirement
+async def handle_root(request):
+    return web.Response(text="Stream Recorder Bot is running!")
+
+async def run_http_server():
+    app = web.Application()
+    app.add_routes([web.get('/', handle_root)])
+    runner = web.AppRunner(app)
+    await runner.setup()
+    port = int(os.environ.get("PORT", 8080))
+    site = web.TCPSite(runner, '0.0.0.0', port)
+    await site.start()
+    print(f"HTTP server running on port {port}")
+
+# Main function to run both the bot and HTTP server
+async def main():
     try:
+        # Start the Telegram bot
         application = Application.builder().token(BOT_TOKEN).build()
         application.add_handler(CommandHandler("start", start))
         application.add_handler(CommandHandler("addchannel", add_channel))
         application.add_handler(CommandHandler("record", record))
         application.add_handler(CallbackQueryHandler(button_callback))
-        print("Bot is running...")
-        application.run_polling()
+        
+        # Start both the HTTP server and bot polling concurrently
+        print("Starting bot and HTTP server...")
+        await asyncio.gather(
+            run_http_server(),
+            application.run_polling()
+        )
     except Exception as e:
-        print(f"Error starting bot: {str(e)}")
+        print(f"Error starting bot or HTTP server: {str(e)}")
         print(traceback.format_exc())
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
